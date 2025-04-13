@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace cobaConfig
+namespace tpmodul14_103022300082
 {
     public class Rootobject
     {
@@ -21,7 +21,7 @@ namespace cobaConfig
     {
         private readonly Rootobject objekJSON;
 
-        public static string FilePath = Path.Combine(Directory.GetCurrentDirectory(), "covid_config.json");
+        private static readonly string FilePath = Path.Combine(Directory.GetCurrentDirectory(), "covid_config.json");
 
         public CovidConfig_103022300082()
         {
@@ -37,34 +37,37 @@ namespace cobaConfig
 
         public void LoadConfig()
         {
-            if (File.Exists(FilePath))
+            if (!File.Exists(FilePath))
             {
-                try
-                {
-                    var configJson = File.ReadAllText(FilePath);
-                    var configFromFile = JsonSerializer.Deserialize<CovidConfig_103022300082>(configJson);
-                    objekJSON.Satuan_Suhu = configFromFile.Dapat_Satuan_suhu();
-                    objekJSON.Batas_Hari_Demam = configFromFile.Dapat_Batas_hari_demam();
-                    objekJSON.Pesan_Ditolak = configFromFile.Dapat_Tolak_Pesanan();
-                    objekJSON.Pesan_Diterima = configFromFile.Dapat_Terima_Pesanan();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
-                }
-            }
-            else
-            {
-                SaveConfig();
                 Console.WriteLine("File tidak ditemukan, membuat file baru");
+                SaveConfig();
+            }
+
+            try
+            {
+                var configJson = File.ReadAllText(FilePath);
+                var configFromFile = JsonSerializer.Deserialize<CovidConfig_103022300082>(configJson) ?? throw new Exception("Gagal memuat konfigurasi dari file JSON.");
+                objekJSON.Satuan_Suhu = configFromFile.Dapat_Satuan_suhu();
+                objekJSON.Batas_Hari_Demam = configFromFile.Dapat_Batas_hari_demam();
+                objekJSON.Pesan_Ditolak = configFromFile.Dapat_Tolak_Pesanan();
+                objekJSON.Pesan_Diterima = configFromFile.Dapat_Terima_Pesanan();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
             }
         }
+
+        private static readonly JsonSerializerOptions options = new()
+        {
+            WriteIndented = true,
+        };
 
         public void SaveConfig()
         {
             try
             {
-                var options = new JsonSerializerOptions { WriteIndented = true };
+                // var options = new JsonSerializerOptions { WriteIndented = true };
                 var jsonString = JsonSerializer.Serialize(this, options);
                 File.WriteAllText(FilePath, jsonString);
                 Console.WriteLine("Berhasil menyimpan konfigurasi baru");
